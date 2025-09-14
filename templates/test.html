@@ -111,6 +111,11 @@ function startCameraFeed() {
                 document.getElementById('cameraFeed').src = 'data:image/jpeg;base64,' + response.data.frame;
                 document.getElementById('cameraFeed').classList.remove('hidden');
                 document.getElementById('cameraPlaceholder').classList.add('hidden');
+            } else if (response.data.test_complete) {
+                // Test is complete, stop camera feed
+                clearInterval(cameraInterval);
+                document.getElementById('cameraPlaceholder').classList.remove('hidden');
+                document.getElementById('cameraFeed').classList.add('hidden');
             }
         } catch (error) {
             console.error('Camera feed error:', error);
@@ -141,6 +146,10 @@ async function updateTestStatus() {
                 clearInterval(testInterval);
                 clearInterval(cameraInterval);
                 
+                // Update timer to show 0.0s
+                document.getElementById('timer').textContent = '0.0s';
+                document.getElementById('progressBar').style.width = '100%';
+                
                 // Show next button or results
                 if (current_hand === 'right') {
                     document.getElementById('nextBtn').classList.remove('hidden');
@@ -149,6 +158,10 @@ async function updateTestStatus() {
                     document.getElementById('nextBtn').classList.remove('hidden');
                     document.getElementById('nextBtn').innerHTML = '<i class="fas fa-chart-line mr-2"></i>View Results';
                 }
+                
+                // Show completion message
+                const handName = current_hand === 'right' ? 'Right Hand' : 'Left Hand';
+                alert(`${handName} test completed! You tapped ${taps} times.`);
             }
         }
     } catch (error) {

@@ -356,13 +356,24 @@ def start_test():
 
 @app.route('/api/camera_feed')
 def camera_feed():
-    if updrs_app.session_data['current_hand']:
-        frame, finger_positions, results = updrs_app.process_frame(updrs_app.session_data['current_hand'])
-        return jsonify({
-            'frame': frame,
-            'finger_positions': finger_positions,
-            'success': True
-        })
+    if updrs_app.session_data['current_hand'] and updrs_app.session_data['test_start_time']:
+        # Check if test is still active
+        elapsed = time.time() - updrs_app.session_data['test_start_time']
+        if elapsed < updrs_app.test_duration:
+            frame, finger_positions, results = updrs_app.process_frame(updrs_app.session_data['current_hand'])
+            return jsonify({
+                'frame': frame,
+                'finger_positions': finger_positions,
+                'success': True
+            })
+        else:
+            # Test is complete, return empty frame
+            return jsonify({
+                'frame': None,
+                'finger_positions': None,
+                'success': False,
+                'test_complete': True
+            })
     return jsonify({'success': False})
 
 @app.route('/api/test_status')
@@ -392,6 +403,12 @@ def test_status():
 @app.route('/api/complete_test', methods=['POST'])
 def complete_test():
     current_hand = updrs_app.session_data['current_hand']
+    
+    # Stop the current test
+    updrs_app.session_data['test_start_time'] = None
+    updrs_app.session_data['current_hand'] = None
+    
+    # Move to next phase
     if current_hand == 'right':
         updrs_app.session_data['test_phase'] = 'left_hand'
     else:
