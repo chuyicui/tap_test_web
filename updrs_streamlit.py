@@ -1,6 +1,4 @@
 import streamlit as st
-import cv2
-import mediapipe as mp
 import numpy as np
 import time
 import json
@@ -17,6 +15,16 @@ from reportlab.lib.utils import ImageReader
 import plotly.graph_objects as go
 import plotly.express as px
 from PIL import Image
+
+# Optional imports for camera functionality
+try:
+    import cv2
+    import mediapipe as mp
+    CAMERA_AVAILABLE = True
+except ImportError:
+    CAMERA_AVAILABLE = False
+    cv2 = None
+    mp = None
 
 # Page configuration
 st.set_page_config(
@@ -95,15 +103,20 @@ st.markdown("""
 
 class UPDRSStreamlitApp:
     def __init__(self):
-        # Initialize MediaPipe
-        self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=2,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.5
-        )
-        self.mp_drawing = mp.solutions.drawing_utils
+        # Initialize MediaPipe if available
+        if CAMERA_AVAILABLE:
+            self.mp_hands = mp.solutions.hands
+            self.hands = self.mp_hands.Hands(
+                static_image_mode=False,
+                max_num_hands=2,
+                min_detection_confidence=0.7,
+                min_tracking_confidence=0.5
+            )
+            self.mp_drawing = mp.solutions.drawing_utils
+        else:
+            self.mp_hands = None
+            self.hands = None
+            self.mp_drawing = None
         
         # Test configuration
         self.test_duration = 10  # seconds
@@ -126,6 +139,8 @@ class UPDRSStreamlitApp:
     
     def is_camera_available(self):
         """Check if camera is available (for Streamlit Cloud compatibility)"""
+        if not CAMERA_AVAILABLE:
+            return False
         try:
             cap = cv2.VideoCapture(0)
             available = cap.isOpened()
@@ -211,7 +226,7 @@ class UPDRSStreamlitApp:
     
     def process_frame(self, frame, target_hand):
         """Process camera frame for hand tracking"""
-        if frame is None:
+        if not CAMERA_AVAILABLE or frame is None:
             return None, None, None
         
         # Flip frame horizontally for mirror effect
@@ -365,6 +380,10 @@ def main():
         <p>Professional Assessment Tool for Motor Function Evaluation</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Show notice if camera/MediaPipe is not available
+    if not CAMERA_AVAILABLE:
+        st.info("🎯 **Simulation Mode**: This app is running in simulation mode. Camera tracking features are not available, but you can still complete the full assessment workflow.")
     
     # Navigation
     phase = st.session_state.session_data['test_phase']
