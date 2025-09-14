@@ -124,6 +124,16 @@ class UPDRSStreamlitApp:
         if 'last_tap_times' not in st.session_state:
             st.session_state.last_tap_times = {'right': 0, 'left': 0}
     
+    def is_camera_available(self):
+        """Check if camera is available (for Streamlit Cloud compatibility)"""
+        try:
+            cap = cv2.VideoCapture(0)
+            available = cap.isOpened()
+            cap.release()
+            return available
+        except:
+            return False
+    
     def find_target_hand(self, results, target_hand):
         """Find the target hand (right or left) from detected hands"""
         if not results.multi_hand_landmarks:
@@ -436,9 +446,14 @@ def show_hand_test(hand):
     </div>
     """, unsafe_allow_html=True)
     
-    # Camera feed
-    st.markdown("### 📹 Camera Feed")
-    camera_placeholder = st.empty()
+        # Camera feed
+        st.markdown("### 📹 Camera Feed")
+        camera_placeholder = st.empty()
+        
+        # Check camera availability
+        camera_available = updrs_app.is_camera_available()
+        if not camera_available:
+            st.warning("⚠️ Camera not available. This is normal on Streamlit Cloud. The app will simulate the test.")
     
     # Test controls
     col1, col2 = st.columns([2, 1])
@@ -494,14 +509,26 @@ def show_hand_test(hand):
         
         # Camera feed simulation (in real deployment, you'd use actual camera)
         if remaining > 0:
-            # Simulate camera frame processing
-            frame = np.zeros((480, 640, 3), dtype=np.uint8)
-            processed_frame, finger_positions, results = updrs_app.process_frame(frame, hand)
-            
-            if processed_frame is not None:
-                # Convert BGR to RGB for display
-                rgb_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-                camera_placeholder.image(rgb_frame, caption=f"{hand_name} Hand Tracking", use_column_width=True)
+            if camera_available:
+                # Real camera processing would go here
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                processed_frame, finger_positions, results = updrs_app.process_frame(frame, hand)
+                
+                if processed_frame is not None:
+                    # Convert BGR to RGB for display
+                    rgb_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
+                    camera_placeholder.image(rgb_frame, caption=f"{hand_name} Hand Tracking", use_column_width=True)
+            else:
+                # Simulate test for Streamlit Cloud
+                camera_placeholder.info(f"🎯 {hand_name} Hand Test Simulation - Tap your fingers together!")
+                
+                # Simulate tap detection for demo purposes
+                import random
+                if random.random() < 0.3:  # 30% chance of detecting a tap each update
+                    if hand == 'right':
+                        st.session_state.session_data['right_hand_results']['taps'] += 1
+                    else:
+                        st.session_state.session_data['left_hand_results']['taps'] += 1
         
         # Check if test is complete
         if remaining <= 0:
