@@ -21,21 +21,8 @@ pip install -r requirements.txt
 streamlit run updrs_streamlit.py
 ```
 
-3. Open your browser to `http://localhost:8501`
 
-## Available versions
-
-- **Streamlit App** (recommended) - Modern web interface
-- **Flask Web App** - Full-featured web application  
-- **Desktop Game** - Standalone Pygame application
-
-## Requirements
-
-- Python 3.7+
-- Webcam/camera access
-- Good lighting for hand detection
 
 ## Disclaimer
 
-This tool is for research and educational purposes only. Not intended for medical diagnosis or treatment.
-
+Whole thing is test purpose. 
