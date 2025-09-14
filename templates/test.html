@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6">
+    <!-- Header -->
+    <div class="text-center mb-6">
+        <h1 id="testTitle" class="text-3xl font-bold text-gray-800 mb-2">Right Hand Test</h1>
+        <p class="text-lg text-gray-600">Tap your thumb and index finger together repeatedly</p>
+    </div>
+    
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Camera Feed -->
+        <div class="camera-container">
+            <div class="bg-gray-900 aspect-video flex items-center justify-center">
+                <img id="cameraFeed" src="" alt="Camera Feed" class="w-full h-full object-cover hidden">
+                <div id="cameraPlaceholder" class="text-center text-white">
+                    <i class="fas fa-camera text-4xl mb-4 opacity-50"></i>
+                    <p class="text-lg opacity-75">Camera Feed</p>
+                    <p class="text-sm opacity-50 mt-2">Make sure your hands are visible</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Controls -->
+        <div class="space-y-6">
+            <!-- Progress Bar -->
+            <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div id="progressBar" class="progress-bar h-full w-0 rounded-full"></div>
+            </div>
+            
+            <!-- Timer and Stats -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-2xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-indigo-600" id="timer">10.0s</div>
+                    <div class="text-sm text-gray-600">Time Remaining</div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 text-center shadow-sm">
+                    <div class="text-2xl font-bold text-green-600" id="tapCount">0</div>
+                    <div class="text-sm text-gray-600">Taps</div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="bg-blue-50 rounded-2xl p-4">
+                <h3 class="font-semibold text-blue-800 mb-2">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Instructions
+                </h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Position your hand clearly in front of the camera</li>
+                    <li>• Tap your thumb and index finger together</li>
+                    <li>• Keep tapping for the full 10 seconds</li>
+                    <li>• Try to maintain a steady rhythm</li>
+                </ul>
+            </div>
+            
+            <!-- Controls -->
+            <div class="space-y-4">
+                <button id="startBtn" onclick="startTest()" class="btn-primary text-white w-full py-4 rounded-xl text-lg font-semibold">
+                    <i class="fas fa-play mr-2"></i>
+                    Start Test
+                </button>
+                
+                <button id="nextBtn" onclick="nextPhase()" class="bg-green-600 hover:bg-green-700 text-white w-full py-4 rounded-xl text-lg font-semibold hidden">
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    Continue to Left Hand
+                </button>
+                
+                <button onclick="goBack()" class="text-gray-600 hover:text-gray-800 w-full py-3 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Questionnaire
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let testActive = false;
+let testInterval = null;
+let cameraInterval = null;
+let currentHand = 'right';
+
+async function startTest() {
+    try {
+        const response = await axios.post('/api/start_test', {
+            hand: currentHand
+        });
+        
+        if (response.data.success) {
+            testActive = true;
+            document.getElementById('startBtn').classList.add('hidden');
+            
+            // Start camera feed
+            startCameraFeed();
+            
+            // Start test monitoring
+            testInterval = setInterval(updateTestStatus, 100);
+        }
+    } catch (error) {
+        console.error('Error starting test:', error);
+        alert('Error starting test. Please try again.');
+    }
+}
+
+function startCameraFeed() {
+    cameraInterval = setInterval(async () => {
+        try {
+            const response = await axios.get('/api/camera_feed');
+            if (response.data.success && response.data.frame) {
+                document.getElementById('cameraFeed').src = 'data:image/jpeg;base64,' + response.data.frame;
+                document.getElementById('cameraFeed').classList.remove('hidden');
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Camera feed error:', error);
+        }
+    }, 100);
+}
+
+async function updateTestStatus() {
+    try {
+        const response = await axios.get('/api/test_status');
+        if (response.data.success) {
+            const { remaining_time, taps, test_complete, current_hand } = response.data;
+            
+            // Update UI
+            document.getElementById('timer').textContent = `${remaining_time.toFixed(1)}s`;
+            document.getElementById('tapCount').textContent = taps;
+            
+            // Update progress bar
+            const progress = ((10 - remaining_time) / 10) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            
+            // Update title
+            const handName = current_hand === 'right' ? 'Right Hand' : 'Left Hand';
+            document.getElementById('testTitle').textContent = `${handName} Test`;
+            
+            if (test_complete) {
+                testActive = false;
+                clearInterval(testInterval);
+                clearInterval(cameraInterval);
+                
+                // Show next button or results
+                if (current_hand === 'right') {
+                    document.getElementById('nextBtn').classList.remove('hidden');
+                    document.getElementById('nextBtn').innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Continue to Left Hand';
+                } else {
+                    document.getElementById('nextBtn').classList.remove('hidden');
+                    document.getElementById('nextBtn').innerHTML = '<i class="fas fa-chart-line mr-2"></i>View Results';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Test status error:', error);
+    }
+}
+
+async function nextPhase() {
+    try {
+        const response = await axios.post('/api/complete_test');
+        if (response.data.success) {
+            if (response.data.next_phase === 'left_hand') {
+                // Switch to left hand
+                currentHand = 'left';
+                document.getElementById('testTitle').textContent = 'Left Hand Test';
+                document.getElementById('startBtn').classList.remove('hidden');
+                document.getElementById('nextBtn').classList.add('hidden');
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('timer').textContent = '10.0s';
+                document.getElementById('tapCount').textContent = '0';
+            } else if (response.data.next_phase === 'results') {
+                // Go to results
+                window.location.href = '/results';
+            }
+        }
+    } catch (error) {
+        console.error('Error completing test:', error);
+    }
+}
+
+function goBack() {
+    window.location.href = '/questionnaire';
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (testInterval) clearInterval(testInterval);
+    if (cameraInterval) clearInterval(cameraInterval);
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-8 text-center">
+    <div class="mb-8">
+        <i class="fas fa-hand-paper text-6xl text-indigo-600 mb-4"></i>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">UPDRS Finger Tapping Test</h1>
+        <p class="text-lg text-gray-600">Professional Assessment Tool</p>
+    </div>
+    
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">What is this test?</h2>
+        <p class="text-gray-600 leading-relaxed max-w-2xl mx-auto">
+            The UPDRS (Unified Parkinson's Disease Rating Scale) finger tapping test is a standardized 
+            assessment that measures fine motor control and coordination. This digital version provides 
+            precise measurements and detailed analysis of your finger movement patterns.
+        </p>
+    </div>
+    
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Test Process:</h3>
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-smile text-2xl text-indigo-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-700 mb-2">1. Mood Assessment</h4>
+                <p class="text-sm text-gray-600">Rate how you're feeling today</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-hands text-2xl text-indigo-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-700 mb-2">2. Hand Testing</h4>
+                <p class="text-sm text-gray-600">Test both hands sequentially</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-chart-line text-2xl text-indigo-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-700 mb-2">3. Results & Report</h4>
+                <p class="text-sm text-gray-600">Download detailed analysis</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Requirements:</h3>
+        <ul class="text-gray-600 space-y-2 max-w-md mx-auto">
+            <li class="flex items-center justify-center">
+                <i class="fas fa-camera text-indigo-600 mr-2"></i>
+                Camera access for hand tracking
+            </li>
+            <li class="flex items-center justify-center">
+                <i class="fas fa-hand-paper text-indigo-600 mr-2"></i>
+                Clear view of your hands
+            </li>
+            <li class="flex items-center justify-center">
+                <i class="fas fa-clock text-indigo-600 mr-2"></i>
+                About 3-5 minutes total time
+            </li>
+        </ul>
+    </div>
+    
+    <button onclick="startTest()" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold">
+        <i class="fas fa-play mr-2"></i>
+        Start Assessment
+    </button>
+</div>
+
+<script>
+function startTest() {
+    window.location.href = '/questionnaire';
+}
+</script>
+{% endblock %}
+

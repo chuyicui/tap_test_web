@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-8 text-center">
+    <div class="mb-8">
+        <i class="fas fa-heart text-5xl text-pink-500 mb-4"></i>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">How are you feeling today?</h1>
+        <p class="text-lg text-gray-600">Please select the emoji that best represents your current mood and energy level</p>
+    </div>
+    
+    <div class="mb-8">
+        <div class="grid grid-cols-5 gap-4 max-w-2xl mx-auto">
+            <button class="emoji-btn p-6 rounded-2xl text-6xl" data-rating="1" onclick="selectMood(1)">
+                <div class="mb-2">😴</div>
+                <div class="text-sm font-medium text-gray-600">Very Tired</div>
+            </button>
+            <button class="emoji-btn p-6 rounded-2xl text-6xl" data-rating="2" onclick="selectMood(2)">
+                <div class="mb-2">😔</div>
+                <div class="text-sm font-medium text-gray-600">Low Energy</div>
+            </button>
+            <button class="emoji-btn p-6 rounded-2xl text-6xl" data-rating="3" onclick="selectMood(3)">
+                <div class="mb-2">😐</div>
+                <div class="text-sm font-medium text-gray-600">Neutral</div>
+            </button>
+            <button class="emoji-btn p-6 rounded-2xl text-6xl" data-rating="4" onclick="selectMood(4)">
+                <div class="mb-2">😊</div>
+                <div class="text-sm font-medium text-gray-600">Good</div>
+            </button>
+            <button class="emoji-btn p-6 rounded-2xl text-6xl" data-rating="5" onclick="selectMood(5)">
+                <div class="mb-2">🤩</div>
+                <div class="text-sm font-medium text-gray-600">Excellent</div>
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-8">
+        <div class="bg-gray-100 rounded-2xl p-6 max-w-2xl mx-auto">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">Why do we ask about your mood?</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">
+                Your emotional state can influence motor performance. By tracking your mood alongside 
+                your test results, we can provide more comprehensive insights into your motor function 
+                and identify patterns that may be related to your overall well-being.
+            </p>
+        </div>
+    </div>
+    
+    <div class="flex justify-center space-x-4">
+        <button onclick="goBack()" class="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back
+        </button>
+        <button id="continueBtn" onclick="continueToTest()" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold opacity-50 cursor-not-allowed" disabled>
+            <i class="fas fa-arrow-right mr-2"></i>
+            Continue to Test
+        </button>
+    </div>
+</div>
+
+<script>
+let selectedMood = null;
+
+function selectMood(rating) {
+    selectedMood = rating;
+    
+    // Remove previous selection
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Add selection to clicked button
+    document.querySelector(`[data-rating="${rating}"]`).classList.add('selected');
+    
+    // Enable continue button
+    const continueBtn = document.getElementById('continueBtn');
+    continueBtn.disabled = false;
+    continueBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+}
+
+function goBack() {
+    window.location.href = '/';
+}
+
+async function continueToTest() {
+    if (!selectedMood) return;
+    
+    try {
+        const response = await axios.post('/api/submit_mood', {
+            mood_rating: selectedMood
+        });
+        
+        if (response.data.success) {
+            window.location.href = '/test';
+        }
+    } catch (error) {
+        console.error('Error submitting mood:', error);
+        alert('Error submitting mood rating. Please try again.');
+    }
+}
+</script>
+{% endblock %}
+
