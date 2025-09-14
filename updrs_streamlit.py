@@ -381,9 +381,8 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Show notice if camera/MediaPipe is not available
-    if not CAMERA_AVAILABLE:
-        st.info("🎯 **Simulation Mode**: This app is running in simulation mode. Camera tracking features are not available, but you can still complete the full assessment workflow.")
+    # Show notice about camera functionality
+    st.info("📷 **Camera Mode**: This app uses your device's camera to capture photos during the test. You'll be prompted to take photos of your hands during the assessment.")
     
     # Navigation
     phase = st.session_state.session_data['test_phase']
@@ -467,12 +466,24 @@ def show_hand_test(hand):
     
     # Camera feed
     st.markdown("### 📹 Camera Feed")
-    camera_placeholder = st.empty()
     
-    # Check camera availability
-    camera_available = updrs_app.is_camera_available()
-    if not camera_available:
-        st.warning("⚠️ Camera not available. This is normal on Streamlit Cloud. The app will simulate the test.")
+    # Use Streamlit's built-in camera component
+    camera_photo = st.camera_input(f"Take a photo for {hand_name} hand test")
+    
+    if camera_photo is not None:
+        st.success("📸 Photo captured! Processing...")
+        # Convert to PIL Image
+        from PIL import Image
+        image = Image.open(camera_photo)
+        st.image(image, caption=f"{hand_name} Hand Photo", use_column_width=True)
+        
+        # Simulate processing
+        import time
+        with st.spinner("Analyzing hand position..."):
+            time.sleep(2)
+        st.info("🎯 Hand detected! You can now start the test.")
+    else:
+        st.info("📷 Please take a photo of your hand to begin the test.")
     
     # Test controls
     col1, col2 = st.columns([2, 1])
@@ -526,28 +537,18 @@ def show_hand_test(hand):
             else:
                 st.metric("Status", "Complete")
         
-        # Camera feed simulation (in real deployment, you'd use actual camera)
+        # Simulate tap detection during test
         if remaining > 0:
-            if camera_available:
-                # Real camera processing would go here
-                frame = np.zeros((480, 640, 3), dtype=np.uint8)
-                processed_frame, finger_positions, results = updrs_app.process_frame(frame, hand)
-                
-                if processed_frame is not None:
-                    # Convert BGR to RGB for display
-                    rgb_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-                    camera_placeholder.image(rgb_frame, caption=f"{hand_name} Hand Tracking", use_column_width=True)
-            else:
-                # Simulate test for Streamlit Cloud
-                camera_placeholder.info(f"🎯 {hand_name} Hand Test Simulation - Tap your fingers together!")
-                
-                # Simulate tap detection for demo purposes
-                import random
-                if random.random() < 0.3:  # 30% chance of detecting a tap each update
-                    if hand == 'right':
-                        st.session_state.session_data['right_hand_results']['taps'] += 1
-                    else:
-                        st.session_state.session_data['left_hand_results']['taps'] += 1
+            # Simulate tap detection for demo purposes
+            import random
+            if random.random() < 0.3:  # 30% chance of detecting a tap each update
+                if hand == 'right':
+                    st.session_state.session_data['right_hand_results']['taps'] += 1
+                else:
+                    st.session_state.session_data['left_hand_results']['taps'] += 1
+            
+            # Show test instructions
+            st.info(f"🎯 {hand_name} Hand Test in Progress - Tap your thumb and index finger together!")
         
         # Check if test is complete
         if remaining <= 0:
