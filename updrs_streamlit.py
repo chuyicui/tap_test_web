@@ -465,14 +465,14 @@ def show_hand_test(hand):
     </div>
     """, unsafe_allow_html=True)
     
-        # Camera feed
-        st.markdown("### 📹 Camera Feed")
-        camera_placeholder = st.empty()
-        
-        # Check camera availability
-        camera_available = updrs_app.is_camera_available()
-        if not camera_available:
-            st.warning("⚠️ Camera not available. This is normal on Streamlit Cloud. The app will simulate the test.")
+    # Camera feed
+    st.markdown("### 📹 Camera Feed")
+    camera_placeholder = st.empty()
+    
+    # Check camera availability
+    camera_available = updrs_app.is_camera_available()
+    if not camera_available:
+        st.warning("⚠️ Camera not available. This is normal on Streamlit Cloud. The app will simulate the test.")
     
     # Test controls
     col1, col2 = st.columns([2, 1])
